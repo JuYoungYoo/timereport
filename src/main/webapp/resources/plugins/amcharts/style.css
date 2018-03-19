@@ -1,0 +1,10 @@
+#chartdiv >*{
+	font-family: Tahoma,Arial,Verdana;
+	font-size: 12px;
+	color: black;
+}
+
+#chartdiv a:link {color: #84c4e2;}
+#chartdiv a:visited {color:#84c4e2;}
+#chartdiv a:hover {color: #cd82ad;}
+#chartdiv a:active {color: #84c4e2;}

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="layout/default">
+<h1>PARAM</h1>
+<body layout:fragment="content" th:inline="text">
+    <div> param1  : [[${param.param1}]]</div>
+    <div> listparam List : [[${param.listparam}]]</div>
+     <!--project name : [[${param.listparam.project_name}]] <br/> 안됨 X-->
+    </th:block>
+</body>
+</html>

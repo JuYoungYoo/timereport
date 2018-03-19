@@ -1,0 +1,118 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="efuture.persistence.StatsDAO">
+    <!--통계 리스트 -->
+    <select id="list" parameterType="efuture.domain.stats.StatsListVO" resultType="hashmap">
+        SELECT
+          option_val,
+          <foreach collection="memberList" item="mem" separator=",">coalesce(sum(${mem}),0) as #{mem}</foreach>
+          ,coalesce(sum(hour),0) as total
+        FROM
+            (
+                SELECT
+                  option_val,
+                  <foreach collection="memberList" item="mem" separator=",">CASE WHEN userid = #{mem} THEN hour END AS #{mem}</foreach>
+                  ,hour
+                FROM (
+                    SELECT
+                        m.userid,
+                        m.name,
+                        p.project_name,
+                        com.code_val AS option_val,
+                        user_seq,
+                        option_seq,
+                        project_seq,
+                        year,
+                        month,
+                        hour
+                    FROM
+                      tb_summary s
+                        INNER JOIN
+                      tb_project p ON s.project_seq = p.seq
+                        INNER JOIN
+                      tb_common_detail com ON s.option_seq = com.detail_code
+                        INNER JOIN
+                      tb_member m ON m.seq = s.user_seq
+                    WHERE
+                      1 = 1 AND
+                      s.year = #{year} AND
+                      s.month = #{month} AND
+                      s.project_seq = #{project_seq} and
+                      s.hour > 0
+                      <if test ="dept.size != 0">
+                        AND m.dept IN (<foreach collection="dept" item="a" separator=",">#{a}</foreach>)
+                      </if>
+                      <if test ="option_seq != null and option_seq != ''">
+                        AND s.option_seq = #{option_seq}
+                      </if>
+                ) AS t
+            ) AS t2
+        GROUP BY option_val
+    </select>
+    <!--/통계 리스트 -->
+    <!--총 업무시간-->
+    <select id="total" parameterType="hashmap" resultType="hashmap">
+        SELECT
+          userid,
+          <foreach collection="memberList" item="mem" separator=",">coalesce(sum(${mem}),0) as #{mem}</foreach>,
+          coalesce(sum(hour),0) as total
+        FROM
+            (
+                SELECT
+                  m.userid,
+                  <foreach collection="memberList" item="mem" separator=",">CASE WHEN userid = #{mem} THEN hour END AS #{mem}</foreach>,
+                  hour
+                FROM
+                    tb_summary s
+                      INNER JOIN
+                    tb_project p ON s.project_seq = p.seq
+                      INNER JOIN
+                    tb_member m ON s.user_seq = m.seq
+                WHERE
+                  1 = 1 AND
+                  s.year = #{year} AND
+                  s.month = #{month} AND
+                  s.hour > 0
+                <if test ="option_seq != null and option_seq != ''">
+                    AND s.option_seq = #{option_seq}
+                </if>
+                <if test ="dept.size != 0">
+                    AND m.dept IN (<foreach collection="dept" item="a" separator=",">#{a}</foreach>)
+                </if>
+            ) AS t
+    </select>
+    <!--/총 업무시간-->
+    <!--월별 수정 권한 -->
+    <select id="getOpenCheck" resultType="efuture.domain.stats.OpenCheckVO" >
+        SELECT
+            seq,
+            month,
+            isopen
+        FROM
+            tb_open_check
+        WHERE
+            1=1 AND
+            year = #{year} AND
+            month = #{month}
+    </select>
+    <!--월별 수정 권한 수정 -->
+    <update id ="changeOpenCheck" parameterType="efuture.domain.stats.OpenCheckVO">
+        UPDATE tb_open_check
+        SET
+            isopen = #{isopen},
+            editdate = sysdate()
+        WHERE
+            seq = #{seq}
+    </update>
+    <!--월별 수정 권한 등록 -->
+    <insert id="addOpenCheck" parameterType="efuture.domain.stats.OpenCheckVO">
+        INSERT INTO  tb_open_check (year, month, isopen, regdate, editdate)
+        VALUES (
+          #{year},
+          #{month},
+          #{isopen},
+          sysdate(),
+          NULL
+        )
+    </insert>
+</mapper>

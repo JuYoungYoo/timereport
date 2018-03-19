@@ -1,0 +1,57 @@
+<!-- ChartJS 1.0.1 -->
+<script src="/resources/plugins/chartjs/Chart.min.js"></script>
+<link rel="stylesheet" href="/resources/plugins/amcharts/style.css" type="text/css">
+<script src="/resources/plugins/amcharts/amcharts.js" type="text/javascript"></script>
+<script src="/resources/plugins/amcharts/pie.js" type="text/javascript"></script>
+<script>
+    $(function(){
+        AmCharts.makeChart("chartdiv",
+                {
+                    "type": "pie",
+                    "angle": 12,
+                    "balloonText": "[[title]]<br><span style='font-size:14px'><b>[[value]]</b> ([[percents]]%)</span>",
+                    "innerRadius": "40%",
+                    "labelRadius": 12,
+                    "outlineAlpha": 1,
+                    "outlineThickness": 2,
+                    "startDuration": 1,
+                    "startEffect": "easeInSine",
+                    "startAlpha": 1,
+                    "minRadius" : 120,
+                    "labelText" : "",
+                    "titleField": "project_name",
+                    "valueField": "total",
+                    "fontSize": 13,
+                    "processTimeout": 1,
+                    "allLabels": [],
+                    "balloon": {},
+                    "legend": {
+                        "enabled": true,
+                        "accessibleLabel": "",
+                        "align": "center",
+                        "labelText": "",
+                        "markerType": "circle",
+                        "showEntries": false,
+                        "switchable": false,
+                        "switchType": "v"
+                    },
+                    "titles": [],
+                    "colors" : [
+                        #foreach($data in $bgColorList)
+                            '$data'
+                            #if(!$foreach.last),#end
+                        #end
+                    ],
+                    "dataProvider": [
+                            #foreach($data in $dataList)
+                                {
+                                    project_name : '$data.project_name',
+                                    total : '$data.total'
+                                }
+                                #if(!$foreach.last) , #end
+                            #end
+                    ]
+                }
+        );
+    });
+</script>

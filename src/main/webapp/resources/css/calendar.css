@@ -1,0 +1,65 @@
+/* drop event */
+.div-event {
+    padding: 5px 10px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+/*  week time slot height   */
+.fc-time-grid .fc-slats td {
+    height: 4.7em;
+}
+
+/*  week time valign top  */
+td.fc-axis.fc-time.fc-widget-content {
+    vertical-align: top;
+}
+
+.dropdown-menu {
+    top: inherit;
+    margin-left: 10px;
+}
+
+.external-event {
+    font-weight: normal;
+    color: #777 !important;
+    display: block;
+    padding: 3px 20px;
+    clear: both;
+    font-weight: 400;
+    line-height: 1.42857143;
+    color: #333;
+    white-space: nowrap;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+.fc-event-container {
+    cursor: pointer;
+}
+
+/*calendar button CSS*/
+.fc-button {
+    background: #f4f4f4;
+    background-image: none;
+    color: #444;
+    border-color: #ddd;
+    border-bottom-color: #ddd;
+}
+
+.fc-unselectable {
+    height: 30px !important;
+}
+.fc-excelDown-button{
+    color: white !important;
+    background-color: black !important;
+}
+
+.fc-save-button{
+    background-color:#000000 !important;
+    color:#ffffff !important;
+
+}

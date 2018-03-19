@@ -1,0 +1,117 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="efuture.persistence.MemberDAO">
+    <!--회원 리스트 수 -->
+    <select id="count" parameterType="efuture.domain.member.MemberListVO" resultType="int">
+        SELECT COUNT(1)
+        FROM tb_member m
+        WHERE 1 = 1
+        <include refid="listCondition"/>
+    </select>
+    <!--회원 리스트-->
+    <select id="list" parameterType="efuture.domain.member.MemberListVO" resultType="hashmap">
+        SELECT
+            m.seq,
+            name,
+            userid,
+            pwd,
+            (SELECT
+                  code_val
+                FROM
+                  tb_common_detail d
+                WHERE
+                  d.detail_code = m.dept) AS dept,
+            (SELECT
+                  code_val
+                FROM
+                  tb_common_detail d
+                WHERE
+                  d.detail_code = m.grade) AS grade,
+            (SELECT
+                  MAX(regdate)
+                FROM
+                  tb_login_history h
+                WHERE
+                  h.userid = m.userid) AS history_date
+        FROM
+          tb_member m
+        WHERE
+          1=1
+        <include refid="listCondition"/>
+        ORDER BY seq DESC
+        LIMIT #{page.startNum}, #{perPageNum}
+    </select>
+    <!--회원 리스트 조건-->
+    <sql id="listCondition">
+        <if test=" DP_CODE != null and DP_CODE != ''">
+            AND m.dept = #{DP_CODE}
+        </if>
+        <if test="schValue != '' and schValue != null">
+            AND m.${schKind} like concat('%',#{schValue},'%')
+        </if>
+    </sql>
+    <!--회원 등록-->
+    <insert id="add" parameterType="efuture.domain.member.MemberVO">
+        INSERT INTO tb_member (userid, name, pwd, dept, grade, regdate)
+        VALUES (
+          #{userid},
+          #{name},
+          #{pwd},
+          #{dept},
+          #{grade},
+          sysdate()
+        )
+    </insert>
+    <!--회원 내용보기-->
+    <select id="content" parameterType="int" resultType="efuture.domain.member.MemberVO">
+        SELECT
+          seq,
+          userid,
+          name,
+          pwd,
+          dept,
+          grade,
+          regdate
+        FROM tb_member
+        WHERE
+          seq = #{seq}
+    </select>
+    <!--회원정보 수정-->
+    <update id = "update" parameterType="efuture.domain.member.MemberVO">
+      UPDATE tb_member
+      SET
+          userid = #{userid},
+          name = #{name},
+          dept = #{dept},
+          grade = #{grade}
+      WHERE seq = #{seq}
+    </update>
+    <!--회원 비밀번호 변경-->
+    <update id = "updatePwd" parameterType="hashmap">
+        UPDATE tb_member
+        SET
+          pwd = #{pwd}
+        WHERE seq = #{seq}
+    </update>
+    <!--회원정보 삭제-->
+    <delete id ="delete" parameterType="int">
+        DELETE
+        FROM tb_member
+        WHERE seq = #{seq}
+    </delete>
+    <!--검색 리스트 -->
+    <select id = "schList" parameterType="efuture.domain.member.MemberSchDTO" resultType="hashmap">
+        SELECT
+            seq,
+            name,
+            userid
+        FROM
+          tb_member
+        WHERE
+            1=1
+            <if test ="deptList.size > 0">
+                AND dept IN (<foreach collection="deptList" item="i" separator=",">#{i}</foreach>)
+            </if>
+        ORDER BY name ASC
+    </select>
+</mapper>

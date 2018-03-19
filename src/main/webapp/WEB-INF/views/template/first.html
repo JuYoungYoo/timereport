@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="layout/default"> <!--layout:decorator  :: layout 경로 -->
+    <!-- 사용자 CSS 추가 -->
+    <th:block layout:fragment="css"/>
+    <!-- 사용자 스크립트 추가 -->
+    <th:block layout:fragment="script"/>
+
+    <!-- 사용 방법 1 -->
+    <!--/* 주석 안에 있는 TAG 주석(remove) 처리-->
+        <h1 th:text="'project name : ' + ${project.project_name}"></h1>
+
+<!--/*@thymesVar id="applicationAttributes" type="org.thymeleaf.context.IWebContext"*/-->
+<h2 th:text="${#ctx.applicationAttributes}"></h2>
+    <!--*/--><br/>
+<h2 th:text="${project.project_name}">test</h2>
+
+    <!-- 사용 방법 2 -->
+    <!-- th:inline 사용하면 일일이 th:text 사용안해도 된다. [[${____}]]로 대체 -->
+    <body layout:fragment="content" th:inline="text">
+            <h2>Properties </h2>
+            <!--properties 변수/값 사용-->
+            <h3>[[#{header.title}]]</h3>
+            <dl>
+                <dt>project name</dt>
+                <dd>[[${project.project_name}]]</dd>
+                <dt>project price</dt>
+                <dd>[[${project.getSeq()}]]</dd>
+            </dl>
+            <h2>Session </h2>
+            <dl th:object="${session.login}">
+                <dt>session map : [[${session.login}]]</dt>
+                <dt>userid : [[*{userid}]]</dt>
+                <dt>name : [[*{name}]]</dt>
+            </dl>
+            <!-- ${session.isEmpty()}, ${session.containsKey('userid')} -->
+
+    </body>
+<script th:inline="javascript">
+    // script 태그에 th:inline="javascript" 속성 정의하면 포함된 스크립트에서 [[ .. ]] 표현식으로 서버 데이터를 스크립트 영역에 표현 가능
+    /*<![CDATA[*/
+        var username = /*[[${session.user.name}]]*/ 'chloe';
+        // thymeleaf 처리 결과 : 주석 뒤 모든 코드('chloe') 가 삭제되고 session.user.name 값만을 가져온다.
+        // 유용하게 사용 됨 : String, beans, maps, collections, arrays 등
+        var user = /*[[${session.user}]*/ null;
+        // 결과 : var user = { 'userid' : 'chloe', ..};
+
+    /*[-*/
+        var remove = '삭제하고 싶은 변수';
+    /*-]*/
+
+    /* [+ */
+        var add = ' 추가하고 싶은 변수 ';
+    /* +] */
+
+     /*]]>*/
+</script>
+</html>

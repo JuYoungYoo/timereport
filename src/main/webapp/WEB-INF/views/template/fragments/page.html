@@ -1,0 +1,35 @@
+<!-- include :  th:fragment="함수명(변수)" 설정 -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<!--th:fragment="default (page)" : 함수명(변수)-->
+<th:block th:fragment="default" >
+<!--<th:block th:fragment="default (page)">-->
+    <div th:if="*{totalPage} > 0" class="dataTables_paginate paging_simple_numbers" id="example1_paginate">
+        <div th:if="*{totalPage} < *{nextPage}">[[*{totalPage}]]</div>
+        <ul class="pagination">
+            <li th:if="*{prevPage} > 0" class="paginate_button previous" id="example1_previous">
+                <!-- javascript parameter 넘기는 방법 -->
+                <a th:onclick="'javascript:movePageFn(\'' + *{startPage} + '\');'" href="#" data-dt-idx="0" tabindex="0">Previous</a>
+            </li>
+            <!-- for loop -->
+            <th:block th:each="i : ${#numbers.sequence(page.startPage , page.endPage)}">
+                <!--class add / 클래스 추가 / 3항 연산-->
+                <li class="paginate_button" th:classappend="${i == page.current}? active">
+                    <a th:onclick="'javascript:movePageFn(\'' + ${i} + '\');'" href="#" data-dt-idx="${i}" tabindex="0">[[${i}]]</a>
+                </li>
+            </th:block>
+            <li th:if="*{totalPage} > *{nextPage}" class="paginate_button next" id="example1_next">
+                <a th:onclick="'javascript:movePageFn(\'' + *{nextPage} + '\');'" href="#" data-dt-idx="*{nextPage}" tabindex="0">Next</a>
+            </li>
+        </ul>
+    </div>
+
+    <script>
+        function movePageFn(param){
+            alert(param);
+        }
+    </script>
+</th:block>
+
+
+

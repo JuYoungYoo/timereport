@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="layout/list"><!--layout:decorator  :: layout 경로 -->
+<body layout:fragment="content">
+    <form name="mainform" id="mainform">
+        <!--<input type ="hidden" name ="seq" id ="seq" value = "$!schInfo.seq"/>-->
+        <!--<input type ="hidden" name ="current" id ="current" value = "$!schInfo.current"/>-->
+        <!-- Your Page Content Here -->
+        <div class="box">
+            <!-- /.box-header -->
+            <div class="box-body">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div class="dataTables_length">
+
+                            <select name="ST_CODE" id="ST_CODE" class="form-control input-sm wdauto">
+                                <option value="">개발상황</option>
+                                <option th:each = "prod:${stateList}"
+                                        th:value="${prod.get('detail_code')}"
+                                        th:text="${prod.get('code_val')}"/>
+                            </select>
+                                 <!--th:selected="${prod.get('detail_code')} == ${schInfo.ST_CODE}"-->
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <label th:text="${list[0]}" >list</label>
+                </div>
+
+                <table class="table table-bordered table-hover dataTable">
+                    <thead>
+                    <tr>
+                        <th class="wd10p">
+                            <label>
+                                <input type="checkbox" class="minimal" name="allCheck" id="allCheck">
+                            </label>
+                        </th>
+                        <th class="sorting">번호</th>
+                        <th class="sorting">프로젝트 명</th>
+                        <th class="sorting">약어</th>
+                        <th class="sorting">개발상황</th>
+                        <th class="sorting">등록일</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.size(list) < 0}">
+                        <td colspan = "6" align = "center" style="padding:19%;">데이터가 없습니다.</td>
+                    </tr>
+                        <!--자신이 속한 block tag 에만 데이터 처리 후 삭제 ( like 지역변수 )  :: 여러 데이터 사용 시 유용 -->
+                        <th:block th:each="vo : ${list}">
+                            <!--
+                                ************ map utils *************
+                                <td th:text="${#maps.containsKey(vo,'project_name')}"></td>
+                                <td th:text="${#maps.isEmpty(vo)}"></td>
+                                <td th:text="${#maps.size(vo)}"></td>
+                                ************************************
+                            -->
+                            <tr>
+                                <td class="wd10p">
+                                    <label><input type="checkbox" class="minimal" name="check" th:value="${vo.seq}"></label>
+                                </td>
+                                <td>$math.sub($page.total,$foreach.index)</td>
+                                <td>
+                                    <a href="javascript:;" th:onclick="${'contentFn(' + vo.seq + ');return false;'}" th:text="${vo.project_name}"></a>
+                                </td>
+                                <td th:text="${vo.project_short_name}"/>
+                                <td th:text="${vo.state}"/>
+                                <td th:text="${#dates.format(vo.regdate, 'YYYY-MM-dd HH:mm:ss')}"/> <!-- java class 사용가능 -->
+                            </tr>
+                        </th:block>
+                    </tbody>
+                </table>
+
+                <!--
+                - th:inline="text" 사용 시 th:text 안하고, 태그 안에 [[ .. ]]를 통해 표현 가능
+                - objects : 변수로 지정 후 해당 변수의 값을 *{ .. } 형태로 가져온다. ex) hashmap, session, value ..
+                  비교 : <div th:text="${page}"></div>
+                -->
+                <th:block th:inline="text" th:object="${page}">
+                    <div class="row">
+                        <div class="col-sm-5">
+                            <div class="dataTables_info" id="example1_info" role="status" aria-live="polite">
+                                Showing [[*{current}]] to [[*{perPageNum}]] of [[*{total}]] entries
+                            </div>
+                        </div>
+                        <!--page-->
+                        <div class="col-sm-7" th:include="fragments/page ::default">
+                            <!--<div class="col-sm-7" th:include="fragments/page ::default (${page})">-->
+                        </div>
+                        <!--/page-->
+                    </div>
+                </th:block>
+            </div>
+            <!-- /.box-body -->
+            <div class="box-footer" th:inline="text">
+                <a  class="btn btn-primary pull-right mgr2p" th:href="@{/param(param1='value1',listparam=${list[0]})}"> GET 이동</a>
+                <a class="btn btn-default pull-right mgr2p" th:href="@{/first}"> TEST page 이동</a>
+                <a class="btn btn-default pull-right mgr2p" th:onclick ="${'onclickFn(sdf);'}">onclick 사용법</a>
+            </div>
+        </div>
+        <!-- /.box -->
+        </div>
+        <!-- /.col -->
+        </div>
+    </form>
+</body>
+</html>
+<script>
+
+    function onclickFn(a){
+        console.log(a);
+        alert('onclick!\n onclick parameter 추가는 page.html 참고 ');
+    }
+
+</script>

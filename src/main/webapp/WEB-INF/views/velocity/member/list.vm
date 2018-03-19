@@ -1,0 +1,134 @@
+#parse("include/header.vm")
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <h1>
+            회원 관리
+            <small>List</small>
+        </h1>
+        <ol class="breadcrumb">
+            <li><a href="#"><i class="fa fa-dashboard"></i> 회원 관리</a></li>
+            <li class="active">LIST</li>
+        </ol>
+    </section>
+    <!-- Main content -->
+    <section class="content">
+        <form name="mainform" id="mainform">
+            <input type="hidden" name="current" id="current" value="$!schInfo.current"/>
+            <input type="hidden" name="seq" id="seq" value="$!schInfo.seq"/>
+            <!-- Your Page Content Here -->
+            <div class="box">
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="dataTables_length">
+                                <label>Show
+                                    <select name="perPageNum" id="perPageNum" class="form-control input-sm">
+                                        <option value="10" #if(10 == $!schInfo.perPageNum) selected #end>10</option>
+                                        <option value="25" #if(25 == $!schInfo.perPageNum) selected #end>25</option>
+                                        <option value="50" #if(50 == $!schInfo.perPageNum) selected #end>50</option>
+                                        <option value="100" #if(100 == $!schInfo.perPageNum) selected #end>100</option>
+                                    </select>
+                                </label>
+                                <select name="DP_CODE" id="DP_CODE" class="form-control input-sm"
+                                        value="$!schInfo.dept">
+                                    <option value="">부서</option>
+                                    #foreach($vo in $deptList)
+                                        <option value="$vo.detail_code"
+                                            #if($!vo.detail_code == $!schInfo.DP_CODE) selected #end>$vo.code_val</option>
+                                    #end
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div id="example2_filter" class="dataTables_filter">
+                                <label>
+                                    <select name="schKind" id="schKind" class="form-control input-sm"
+                                            value="$!schInfo.schKind">
+                                        <option value="name" #if('name' == $!schInfo.schKind) selected #end>이름</option>
+                                        <option value="userid" #if('userid' == $!schInfo.schKind) selected #end>아이디
+                                        </option>
+                                    </select>
+                                </label>
+                                <input type="text" id="schValue" name="schValue" class="form-control input-sm"
+                                       value="$!schInfo.schValue" >
+                                <button type="button" id="schBtn" class="btn btn-default btn-sm pull-right"> 검색</button>
+                            </div>
+                        </div>
+                    </div>
+                #*리스트*#
+                    <table class="table table-bordered table-hover dataTable orderBy">
+                        <thead>
+                        <tr>
+                            <th class="wd10p default">
+                                <label>
+                                    <input type="checkbox" class="minimal" name="allCheck" id="allCheck">
+                                </label>
+                            </th>
+                            <th class="default">번호</th>
+                            <th class="orderBy sorting">이름</th>
+                            <th class="orderBy sorting_asc">아이디</th>
+                            <th class="orderBy sorting_desc">비밀번호</th>
+                            <th class="orderBy sorting">부서</th>
+                            <th class="orderBy sorting">권한</th>
+                            <th class="orderBy sorting">마지막 로그인</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            #if($list.isEmpty())
+                            <tr>
+                                <td colspan="8" style="padding:19%;" align="center">데이터가 없습니다.</td>
+                            </tr>
+                            #else
+                                #foreach($vo in $list)
+                                <tr>
+                                    <td class="wd10p">
+                                        <label>
+                                            <input type="checkbox" class="minimal" value="$vo.seq" name="check" value="$!vo.seq">
+                                        </label>
+                                    </td>
+                                    <td>$math.sub($page.listNum,$foreach.index)</td>
+                                    <td><a href="javascript:;"
+                                           onclick="contentFn('$!vo.seq');return false;">$!vo.name</a></td>
+                                    <td>$vo.userid</td>
+                                    <td>$vo.pwd</td>
+                                    <td>$!vo.dept</td>
+                                    <td> $!vo.grade</td>
+                                    <td>$!date.format('YYYY-MM-dd HH:mm:ss',$vo.history_date)</td>
+                                </tr>
+                                #end
+                            #end
+                        </tbody>
+                    </table>
+                    <div class="row">
+                        <div class="col-sm-5">
+                            <div class="dataTables_info" id="example1_info" role="status" aria-live="polite">
+                                Showing $page.current to $page.perPageNum of $page.total entries
+                            </div>
+                        </div>
+                        <div class="col-sm-7">
+                            #parse("include/page.vm")
+                        </div>
+                    </div>
+                </div>
+            #*      /리스트      *#
+                <!-- /.box-body -->
+                <div class="box-footer">
+                    <button type="button" class="btn btn-primary pull-right mgr2p" onclick="href.post('/member/form/add','#mainform')">등록</button>
+                    <button type="button" class="btn btn-default pull-right mgr2p" onclick ="deleteFn();return false;">삭제</button>
+                    <button type="button" class="btn btn-default pull-right mgr2p" onclick="location.href='/member';return false;">초기화</button>
+                </div>
+            </div>
+            <!-- /.box -->
+</div>
+<!-- /.col -->
+</div>
+</form>
+</section>
+<!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+#parse("include/footer.vm")
+<script src="/resources/js/member/list.js"></script>

@@ -1,0 +1,142 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="efuture.persistence.ProjectDAO">
+    <!--검색 시 리스트 -->
+    <select id="schList" parameterType="efuture.domain.project.ProjectSchDTO" resultType="hashmap">
+        SELECT DISTINCT
+          p.seq,
+          p.project_name,
+          p.project_short_name,
+          bgcolor
+        FROM tb_project p
+          LEFT JOIN tb_project_dept d
+            ON p.seq = d.seq
+        WHERE
+          1=1
+            <if test = "state != null and state !=''">
+                AND p.state = #{state}
+            </if>
+            <if test ="deptList.size > 0">
+                AND dept IN (<foreach collection="deptList" item="i" separator=",">#{i}</foreach>)
+            </if>
+          ORDER BY project_name ASC
+    </select>
+    <!--프로젝트 수-->
+    <select id="count" parameterType="efuture.domain.project.ProjectListVO" resultType="int">
+        SELECT
+          count(1)
+        FROM tb_project
+        WHERE
+          1 = 1
+          <include refid="listCondition"/>
+    </select>
+    <!--프로젝트 리스트-->
+    <select id="list" parameterType="efuture.domain.project.ProjectListVO" resultType="hashmap">
+        SELECT
+          seq,
+          project_name,
+          project_short_name,
+          (SELECT
+            code_val
+          FROM
+            tb_common_detail d
+          WHERE
+            d.detail_code = p.state) AS state,
+          regdate
+        FROM tb_project p
+        WHERE
+          1 = 1
+          <include refid="listCondition"/>
+        ORDER BY p.seq DESC
+        LIMIT #{page.startNum}, #{perPageNum}
+    </select>
+    <sql id="listCondition">
+        <if test ="ST_CODE != null and ST_CODE != ''">
+            AND state = #{ST_CODE}
+        </if>
+        <if test ="schValue != null and schValue != ''">
+            AND project_name like concat('%',#{schValue},'%')
+        </if>
+    </sql>
+    <!--프로젝트 내용보기-->
+    <select id="content" parameterType="int" resultType="efuture.domain.project.ProjectVO">
+      SELECT
+          seq,
+          project_name,
+          project_short_name,
+          state,
+          complete_date,
+          regdate,
+          bgcolor
+       FROM
+          tb_project
+       WHERE seq = #{seq}
+    </select>
+    <!--프로젝트 등록-->
+    <insert id="add" parameterType="efuture.domain.project.ProjectVO" >
+        <selectKey keyProperty="seq" resultType="int" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO tb_project
+        (
+          project_name,
+          project_short_name,
+          state,
+          complete_date,
+          regdate,
+          bgcolor
+        )
+        VALUES (
+          #{project_name},
+          #{project_short_name},
+          #{state},
+          #{complete_date},
+          sysdate(),
+          #{bgcolor}
+        )
+    </insert>
+    <!--프로젝트 수정-->
+    <update id="update" parameterType="efuture.domain.project.ProjectVO" >
+      UPDATE
+        tb_project
+       SET
+          project_name = #{project_name},
+          project_short_name = #{project_short_name},
+          state = #{state},
+          complete_date = #{complete_date},
+          bgcolor = #{bgcolor}
+        WHERE seq = #{seq}
+    </update>
+    <!--프로젝트 삭제-->
+    <delete id="delete" parameterType="int">
+        DELETE FROM tb_project
+        WHERE seq = #{seq}
+    </delete>
+    <!--프로젝트 부서 리스트-->
+    <select id="selectDept" parameterType="int" resultType="string">
+        SELECT
+          dept
+        FROM
+          tb_project_dept
+        WHERE
+          seq = #{seq}
+    </select>
+    <!--프로젝트 부서 등록-->
+    <insert id="addDept" parameterType="hashmap">
+        INSERT INTO tb_project_dept ( seq, dept )
+        VALUES ( #{seq}, #{dept})
+    </insert>
+    <!--프로젝트 부서 삭제-->
+    <delete id="deleteDept" parameterType="int">
+        DELETE FROM tb_project_dept
+        WHERE seq = #{seq}
+    </delete>
+    <select id="isUseBySeq" parameterType="int" resultType="int">
+        SELECT
+            COUNT(1)
+        FROM
+            tb_timereport
+        WHERE
+            project_seq = #{seq}
+    </select>
+</mapper>

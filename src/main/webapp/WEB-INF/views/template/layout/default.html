@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace = "fragments/config :: configFragment"/>
+
+<header th:replace="fragments/header :: mainFragment"/>
+
+<!--tag 마감 중요-->
+<body layout:fragment="content"></body>
+
+<footer th:replace="fragments/footer :: mainFragment"/>
+</html>

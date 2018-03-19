@@ -1,0 +1,453 @@
+#parse("include/header.vm")
+<!-- fullCalendar 3.4.0-->
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.print.css" media="print">
+<link rel="stylesheet" href="/resources/css/calendar.css">
+<form name="schForm" id="schForm">
+    <input type="hidden" name="start_date" id="start_date" value="$!schInfo.start_date"/>
+    <input type="hidden" name="end_date" id="end_date"/>
+    <input type="hidden" name="year" id="year" value ="0"/>
+    <input type="hidden" name="month" id="month" value ="0"/>
+    <div class="content-wrapper">
+        <!-- Content Header (Page header) -->
+        <section class="content-header">
+            <h1>
+                TIME REPORT
+            </h1>
+            <ol class="breadcrumb">
+                <li><a href="#"><i class="fa fa-dashboard"></i> TIME REPORT</a></li>
+                <li class="active">리스트</li>
+            </ol>
+        </section>
+        <!-- Main content -->
+        <section class="content">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="box box-solid">
+                        <div class="box-header with-border">
+                            <h4 class="box-title">Project List</h4>
+                        </div>
+                        <div class="box-body" id="project">
+                            #foreach($list in $projectList)
+                                <!-- the events -->
+                                <div id="external-events">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                        <div class="div-event"
+                                             style="background: $list.bgcolor;color:rgb(255, 255, 255);"
+                                             value="$list.seq">$list.project_name</div>
+                                    </a>
+                                #*  start option  *#
+                                    <ul class="dropdown-menu">
+                                        #foreach($vo in $optionList)
+                                            <li class="external-event" id="$vo.detail_code">$vo.code_val</li> #end
+                                    </ul>
+                                #*  end option  *#
+                                </div>
+                            #end
+                        </div>
+                        <!-- /.box-body -->
+                    </div>
+                    <!-- /. box -->
+                    <!-- DONUT CHART -->
+                    <div class="box box-danger">
+                        <div class="box-header with-border">
+                            <h3 class="box-title">Monthly Chart</h3>
+                            <div class="box-tools pull-right">
+                                <button type="button" class="btn btn-box-tool" data-widget="collapse"><i
+                                        class="fa fa-minus"></i>
+                                </button>
+                                <button type="button" class="btn btn-box-tool" data-widget="remove"><i
+                                        class="fa fa-times"></i></button>
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <div id="chartdiv" style="width: 100%; height:270px;"></div>
+                        </div>
+                        <!-- /.box-body -->
+                    </div>
+                    <div class="" style="-ms-overflow-style: none;">
+<pre style="color:#6e6e6e;background: none;border:none;">
+* 사용법
+[ 저장 ]
+ 1. 프로젝트 리스트에서 프로젝트 클릭
+ 2. 해당하는 옵션 누른 후, 원하는 날짜로 이동
+ 3. 모든 데이터 입력 후 캘린더 상단의 "save"버튼 클릭
+  - "week"에서만 저장 및 수정 가능
+
+[ 삭제 ]
+  - 저장된 데이터 : 클릭
+  - 미저장된 데이터 : 클릭 또는 캘린더 밖으로 드래그
+</pre>
+                    </div>
+                    <!-- /.box -->
+                </div>
+                <!-- /.col -->
+                <div class="col-md-9">
+                    <div class="box box-primary">
+                        <div class="box-body no-padding">
+                            <!-- THE CALENDAR -->
+                            <div id="calendar"></div>
+                        </div>
+                        <!-- /.box-body -->
+                    </div>
+                    <!-- /. box -->
+                </div>
+                <!-- /.col -->
+            </div>
+            <!-- /.row -->
+    </div>
+    <!-- ./wrapper -->
+    </section>
+    <!-- /.content -->
+    </div>
+    <!-- /.content-wrapper -->
+</form>
+#parse("include/footer.vm")
+
+<!-- jQuery UI 1.11.4 -->
+<script src="//code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+<!-- Slimscroll -->
+<script src="/resources/plugins/slimScroll/jquery.slimscroll.min.js"></script>
+<!-- FastClick -->
+<script src="/resources/plugins/fastclick/fastclick.js"></script>
+<!-- fullCalendar 3.4.5 -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.2/moment.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.min.js"></script>
+<!-- Page specific script -->
+<script>
+    // 회원관리 메뉴 CSS 활성화
+        #if('GD003' == $utils.getSession('login').getGrade())
+             $('.sidebar-menu li').eq(1).addClass('active');
+        #else
+             $('.sidebar-menu li').eq(4).addClass('active');
+        #end
+
+    var calendarMap = new Map();  //    TEMP DATA
+    /// CALENDAR
+    $(function () {
+        // 임시 데이터 담기
+        function dataMap(event) {
+            var obj = new Object();
+            obj['gubun'] = event.gubun;
+            obj['seq'] = event.seq;
+            obj['allday'] = (event.allDay) ? 'true' : 'false';
+            obj['start_date'] = event.start;
+            obj['end_date'] = (event.end != null) ? event.end : event.start;
+            calendarMap.put(event._id, obj);
+        }
+
+        /* 프로젝트 > 캘린더로 드래그 :::initialize the external events
+         -----------------------------------------------------------------*/
+        function ini_events(ele) {
+            ele.each(function () {
+                // create an Event Object (http://arshaw.com/fullcalendar/docs/event_data/Event_Object/)
+                // it doesn't need to have a start or end
+                var eventObject = {
+                    title: $(this).text() // use the element's text as the event title
+                };
+                // store the Event Object in the DOM element so we can get to it later
+                $(this).data('eventObject', eventObject).data('duration', '01:00');
+                // make the event draggable using jQuery UI
+                $(this).draggable({
+                    zIndex: 999,
+                    revert: true, // will cause the event to go back to its
+                    revertDuration: 0  //  original position after the drag
+                });
+            });
+        }
+
+        ini_events($('#external-events .dropdown-menu li.external-event'));
+        /* initialize the calendar
+         -----------------------------------------------------------------*/
+        // ad-hoc way of getting an add button in there.
+        // for a better solution, please star this issue:
+        //  https://code.google.com/p/fullcalendar/issues/detail?id=225
+        $('#calendar').fullCalendar({
+            defaultDate: $('#start_date').val(),
+            defaultView: 'agendaWeek',
+            height: 750,
+            minTime: "09:00:00",     // view min time
+            maxTime: "18:00:00",     // view max time
+            selectable: false,
+            selectOverlap: false,
+            dropOverlap: false,
+            eventOverlap: false,
+            editable: true,
+            droppable: true, // this allows things to be dropped onto the calendar !!!
+            businessHours: [
+                {
+                    dow: [0, 1, 2, 3, 4, 5, 6],   // day
+                    start: '09:00',        // start time
+                    end: '12:00'            // end time
+                },
+                {
+                    dow: [0, 1, 2, 3, 4, 5, 6],
+                    start: '13:00',
+                    end: '18:00'
+                }
+            ],
+            slotDuration: "1:00",
+            timezone: "local",
+            timeFormat: 'H:mm',
+            customButtons: {
+                // 저장 Function
+                save: {
+                    text: 'save',
+                    click: function () {
+                        if (calendarMap.size() == 0) {
+                            alert('저장할 데이터가 없습니다.');
+                            return;
+                        }
+                        // Save Data
+                        var data = Map.convertObj(calendarMap.map);
+                        $.ajax({
+                            type: 'post',
+                            url: '/report/save',
+                            data: JSON.stringify(data),
+                            contentType: "application/json",
+                            dataType: 'json',
+                            error: function (data) {
+                                console.log(data);
+                            },
+                            success: function (data) {
+                                alert(data.RESULT_MSG);
+                                if (data.RESULT_CODE == 'SUCCESS') {
+                                    tempInitFn();
+                                    chartDataFn();
+                                    $('#calendar').fullCalendar('refetchEvents');
+                                }
+                            }
+                        });
+                    }
+                }
+            },
+            header: {
+                left: 'prev,next today save',
+                center: 'title',
+                right: 'month,agendaWeek'
+            },
+            buttonText: {
+                today: 'today',
+                month: 'month',
+                week: 'week',
+            },
+            googleCalendarApiKey: "AIzaSyBHnhK0E0PYb-n2yevmrEQOFEPcznuCx5I",
+            /*       DB 데이터 연동
+            start, end : 캘린더 시작, 끝 날짜      */
+            eventSources: [
+                {
+//                    googleCalendarId : "ko.south_korea#holiday@group.v.calendar.google.com"
+//                    , className : "holiday"
+//                    , color : "red"
+//                    , textColor : "red"
+                },
+                {
+                    events: function (start, end, timezone, callback) {
+                        $('#start_date').val(start.format());
+                        $('#end_date').val(end.format());
+                        $.ajax({
+                            url: '/report/datalist',
+                            type: 'post',
+                            data: $('#schForm').serialize(),
+                            cache: false,
+                            dataType: 'json',
+                            success: function (data) {
+                                var events = [];
+                                $.map(data, function (r) {
+                                    events.push({
+                                        id: r.seq,
+                                        title: '[' + r.project_name + ']' + r.option_name,
+                                        allDay: (r.allday === 'true'),
+                                        start: new Date(r.start_date),
+                                        end: new Date(r.end_date),
+                                        gubun: 'DEFAULT',
+                                        backgroundColor: r.bgcolor,
+                                        borderColor: r.bgcolor,
+                                        editable: false
+                                    });
+                                });
+                                callback(events);
+                            },
+                            error: function (data) {
+                                alert('데이터 호출에 실패하였습니다.');
+                            }
+                        });
+                    }
+                }
+            ],
+            // 처음 프로젝트 옵션 drag drop 할 시 event
+            selectAllow: function (selectInfo) {
+                /*      점심시간    */
+                if ((selectInfo.start.format('HH') <= 12 && selectInfo.end.format('HH') >= 13)) return false;
+            },
+            // 캘린더 내부에 있는 데이터 action 시 event
+            eventAllow: function (dropLocation, draggedEvent) {
+                console.log(dropLocation);
+                console.log(draggedEvent);
+                var start = dropLocation.start;
+                var end = dropLocation.end;
+                var allDay = end.diff(start) / 1000 / 60 / 60;
+
+                /*      ALL-Day check   */
+                if (allDay < 24) {
+                    /*      점심시간    */
+                    if (start.format('HH') <= 12 && end.format('HH') >= 13) return false;
+                    if (start.format('HH') < 9 || end.format('HH') > 18) return false;
+                } else {
+                    /* 해당 월부터 다음달 1일까지 ( 마지막일 end == 다음달 1일) */
+                    if (end.format() > start.add(1, 'month').startOf('month').format()) {
+                        return false;
+                    }
+                }
+            },
+            // 캘린더 내부에 있는 데이터 Drop 시 event
+            eventDrop: function (event, delta, revertFunc, jsEvent, ui, view) {
+                /*      수정 권한       */
+                if ('false' == checkFn(event.start)) revertFunc();
+                dataMap(event);
+            },
+            // 캘린더 내부에 있는 데이터 resize (날짜 늘리거나, 줄이기)
+            eventResize: function (event, delta, revertFunc, jsEvent, ui, view) {
+                dataMap(event);
+            },
+            // 캘린더 내부 데이터 Click event (삭제)
+            eventClick: function (event, element) {
+                if (confirm('삭제하시겠습니까?')) deleteFn(event);
+            },
+            // 캘린더 내부 데이터 Drag Stop 시 event (삭제)
+            eventDragStop: function (event, jsEvent) {
+                /*  drag standard을 벗어날 경우 event  */
+                var standard = $('#calendar');
+                var ofs = standard.offset();
+
+                var x1 = ofs.left;
+                var x2 = ofs.left + standard.outerWidth(true);
+                var y1 = ofs.top;
+                var y2 = ofs.top + standard.outerHeight(true);
+
+                // Calendar Outside
+                if (!(jsEvent.pageX >= x1 && jsEvent.pageX <= x2 && jsEvent.pageY >= y1 && jsEvent.pageY <= y2)) {
+                    deleteFn(event);
+                }
+            },
+            // drag div input 시
+            eventAfterRender: function (event, element, view) {
+                if (event.gubun == null) {
+                    event.gubun = 'NEW';
+                    dataMap(event);     // Temp Map
+                }
+            },
+            // Calendar view page change ( 캘린더 페이지 전환 시 )
+            viewRender: function (view, element) {
+                /* agendaweek 일 시 등록 버튼 */
+                if ('month' == view.type) {
+                    $('button.fc-save-button').hide();
+                    $('.dropdown-toggle').addClass('disabled')
+                } else {
+                    $('button.fc-save-button').show();
+                    $('.dropdown-toggle').removeClass('disabled')
+                }
+                var start = view.intervalStart;
+                $('#year').val(start.format('YYYY'));
+                $('#month').val(start.format('M'));
+                setCookie("start_date", start.format(), "/report");
+                tempInitFn();             // 임시 데이터 초기화
+                chartDataFn();            // 차트
+            },
+            drop: function (date, jsEvent, ui, resourceId) { // this function is called when something is dropped
+                if ('false' == checkFn(date)) return;
+                var optionTag = $(ui.helper);
+                var seq = $('#external-events.open>a>div').attr('value') + '|' + optionTag.attr('id'); // PROJECT SEQ | OPTION SEQ
+                var title = '[' + $('#external-events.open>a>div').text() + '] ' + optionTag.text();   // 캘린더 안의 TITLE NAME
+
+                // retrieve the dropped element's stored Event Object
+                var originalEventObject = {title: title};
+                // we need to copy it, so that multiple events don't have a reference to the same object
+                var copiedEventObject = $.extend({}, originalEventObject);
+
+                // 이벤트에 저장할 데이터
+                // assign it the date that was reported
+                copiedEventObject.seq = seq;
+                copiedEventObject.start = new Date(date);
+                copiedEventObject.end = new Date(date).addHours(1);
+                copiedEventObject.backgroundColor = $('#external-events.open>a>div').css("background-color");
+                copiedEventObject.borderColor = $('#external-events.open>a>div').css("border-color");
+
+                // render the event on the calendar
+                // the last `true` argument determines if the event "sticks" (http://arshaw.com/fullcalendar/docs/event_rendering/renderEvent/)
+                $('#calendar').fullCalendar('renderEvent', copiedEventObject, true);    // 캘린더에 이벤트 추가
+            }
+        });
+    });
+    /*    삭제 Function     */
+    function deleteFn(event) {
+        if (event.gubun == 'NEW') {
+            calendarMap.remove(event._id);
+            $('#calendar').fullCalendar('removeEvents', event._id);
+        } else {
+            // DB DATA DELETE
+            $.ajax({
+                type: 'get',
+                url: '/report/delete',
+                data: {seq: event.id},
+                dataType: 'json',
+                error: function (data) {
+                    console.log(data);
+                    alert(data.RESULT_MSG);
+                },
+                success: function (data) {
+                    alert(data.RESULT_MSG);
+                    if (data.RESULT_CODE == 'SUCCESS') $('#calendar').fullCalendar('removeEvents', event.id);
+                    chartDataFn();
+                }
+            });
+        }
+    }
+    /*  차트 function     */
+    function chartDataFn() {
+        $.ajax({
+            type: 'post',
+            url: '/report/chart',
+            data: $('#schForm').serialize(),
+            dataType: 'html',
+            cache: false,
+            error: function (data) {
+                console.log(data);
+            },
+            success: function (data) {
+                $('#chartdiv').html(data);
+            }
+        });
+    }
+    /*   월별 권한 체크    */
+    function checkFn(date) {
+        var check = false;
+        $.ajax({
+            type: 'get',
+            url: '/report/check',
+            data: {
+                year: date.format('YYYY'),
+                month: date.format('MM')
+            },
+            dataType: 'text',
+            async: false,
+            error: function (e) {
+                console.log(e);
+                alert('[ERROR]고객센터로 연락바랍니다.');
+            },
+            success: function (data) {
+                if (data == 'false') alert('해당 날짜는 수정불가합니다. (' + date.format('YYYY/M') + ')');
+                check = data;
+            }
+        });
+        return check;
+    }
+    /*  임시 데이터 초기화  */
+    function tempInitFn() {
+        var keys = Object.keys(calendarMap.map);    // TEMP DIV LIST
+        $.each(keys, function (index, val) {
+            $('#calendar').fullCalendar('removeEvents', val);   // 임시 데이터 UI 삭제
+        });
+        calendarMap = new Map();
+    }
+</script>

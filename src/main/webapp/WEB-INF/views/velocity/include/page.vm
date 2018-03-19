@@ -1,0 +1,27 @@
+#if($page.totalPage > 0)
+    <div class="dataTables_paginate paging_simple_numbers" id="example1_paginate">
+        <ul class="pagination">
+            #if($page.prevPage > 0)
+                <li class="paginate_button previous" id="example1_previous">
+                    <a href="javascript:movePageFn($page.startPage);" data-dt-idx="0" tabindex="0">Previous</a>
+                </li>
+            #end
+            #foreach( $i in [$page.startPage..$page.endPage])
+                #if( $i == $page.current)
+                    <li class="paginate_button active">
+                #else
+                    <li class="paginate_button">
+                #end
+                    <a href="javascript:movePageFn($i);" data-dt-idx="$i" tabindex="0">$i</a>
+                </li>
+            #end
+            #if( $page.totalPage > $page.nextPage)
+                <li class="paginate_button next" id="example1_next">
+                    <a href="javascript:movePageFn($page.nextPage);" data-dt-idx="$page.nextPage" tabindex="0">Next</a>
+                </li>
+            #end
+        </ul>
+    </div>
+#end
+
+

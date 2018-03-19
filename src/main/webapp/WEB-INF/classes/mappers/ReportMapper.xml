@@ -1,0 +1,100 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="efuture.persistence.ReportDAO">
+    <!--타임리포트 리스트 -->
+    <select id ="list" parameterType="efuture.domain.report.TimeReportListVO" resultType="efuture.domain.report.TimeReportVO">
+        <![CDATA[
+            SELECT
+                t.seq,
+                t.project_seq,
+                t.option_seq,
+                t.start_date,
+                t.end_date,
+                t.hour,
+                t.allday,
+                p.project_name,
+                p.project_short_name,
+                p.bgcolor,
+                (SELECT
+                        code_val
+                    FROM
+                        tb_common_detail d
+                    WHERE
+                        t.option_seq = d.detail_code) AS option_name
+            FROM
+                tb_timereport t
+                    LEFT JOIN
+                tb_project p ON t.project_seq = p.seq
+            WHERE
+                1 = 1 AND
+                t.user_seq = #{user_seq} AND
+                t.start_date >= #{start_date} AND
+                t.start_date < #{end_date}
+        ]]>
+    </select>
+    <!--타임리포트 등록-->
+    <insert id="add" parameterType="efuture.domain.report.TimeReportSaveVO">
+        INSERT INTO tb_timereport ( user_seq, project_seq, option_seq, start_date, end_date, hour, allday, regdate )
+        VALUES ( #{user_seq}, #{project_seq}, #{option_seq}, #{start_date}, #{end_date}, #{hour}, #{allday}, sysdate())
+    </insert>
+    <!--타임리포트 삭제-->
+    <delete id="delete" parameterType="int">
+        DELETE FROM tb_timereport
+        WHERE seq = #{seq}
+    </delete>
+    <!-- 월별 차트 데이터 -->
+    <select id ="chartByMM" parameterType="efuture.domain.report.TimeReportListVO" resultType="hashmap">
+        SELECT
+            p.project_name,
+            p.bgcolor,
+            SUM(hour) as total
+        FROM
+          tb_summary s left join tb_project p
+        ON s.project_seq = p.seq
+        WHERE
+            1 = 1 AND
+            user_seq = #{user_seq} AND
+            year = #{year} AND
+            month = #{month} AND
+            hour > 0
+        GROUP BY PROJECT_SEQ
+        ORDER BY project_name DESC
+    </select>
+
+    <resultMap id="excelResultMap" type="efuture.domain.report.excel.ExcelOptionVO">
+        <id property="project_seq" column="project_seq" javaType="int"/>
+        <id property="option_seq" column="option_seq" javaType="java.lang.String"/>
+        <result property="option_name" column="option_name"/>
+        <collection property="dataList" ofType="efuture.domain.report.excel.ExcelOptionDataVO">
+            <result property="start_date" column="start_date"/>
+            <result property="end_date" column="end_date"/>
+            <result property="duration" column="duration"/>
+            <result property="hour" column="hour"/>
+            <result property="day" column="day"/>
+        </collection>
+    </resultMap>
+    <select id="excel" parameterType="efuture.domain.report.excel.ExcelListVO" resultMap="excelResultMap">
+        <![CDATA[
+            SELECT
+                project_seq,
+                option_seq,
+                d.code_val as option_name,
+                datediff(end_date,start_date) as duration,
+                date_format(start_date,'%d') as day,
+                start_date,
+                end_date,
+                sum(hour) as hour
+            FROM
+                tb_timereport t,
+                tb_common_detail d
+            WHERE
+                1=1 AND
+                t.option_seq = d.detail_code AND
+                t.start_date >=  #{start_date} AND
+                t.start_date < #{next_date} AND
+                user_seq = #{user_seq} AND
+                project_seq = #{project_seq}
+            GROUP BY option_seq , DATE_FORMAT(start_date, '%y-%m-%d')
+        ]]>
+    </select>
+</mapper>

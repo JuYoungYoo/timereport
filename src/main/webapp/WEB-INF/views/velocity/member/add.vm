@@ -1,0 +1,79 @@
+#parse("include/header.vm")
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <h1>
+            회원관리
+            <small>REGISTER</small>
+        </h1>
+        <ol class="breadcrumb">
+            <li><a href="#"><i class="fa fa-dashboard"></i> Member</a></li>
+            <li class="active">Register</li>
+        </ol>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <!-- Your Page Content Here -->
+        <!-- Horizontal Form -->
+        <div class="box box-info">
+            <!-- form start -->
+            <form role="form" name ="mainform" id ="mainform" method="post">
+                <div class="box-body">
+                    <div class="form-group col-md-3 col-md-offset-4">
+                            <label for="userid">아이디</label>
+                            <input type="text" class="form-control" name="userid" id="userid" placeholder="ID">
+                            <span class="help-block"></span>
+                    </div>
+                    <div class="form-group col-md-3 col-md-offset-4">
+                        <label for="password">비밀번호</label>
+                        <input type="password" class="form-control" name="pwd" id="pwd" placeholder="Password">
+                        <span class="help-block"></span>
+                    </div>
+                    <div class="form-group col-md-3 col-md-offset-4">
+                        <label for="pwdCheck">비밀번호 확인</label>
+                        <input type="password" class="form-control" id="pwdCheck" placeholder="Password check">
+                        <span class="help-block"></span>
+                    </div>
+
+                    <div class="form-group col-md-3 col-md-offset-4">
+                        <label for="name">이름</label>
+                        <input type="name" class="form-control" name ="name" id="name" placeholder="Name">
+                        <span class="help-block"></span>
+                    </div>
+
+                    <div class="form-group col-md-3 col-md-offset-4">
+                        <label>부서</label>
+                        <select class="form-control col-sm-1" name="dept">
+                            #foreach($vo in $deptList)
+                                <option value ="$!vo.detail_code">$!vo.code_val</option>
+                            #end
+                        </select>
+                        <span class="help-block"></span>
+                    </div>
+                    <div class="form-group col-md-2 col-md-offset-4">
+                        <label>회원권한</label>
+                            <select class="form-control col-sm-2" name="grade">
+                                #foreach($vo in $gradeList)
+                                    <option value ="$!vo.detail_code">$!vo.code_val</option>
+                                #end
+                            </select>
+                        </div>
+                        <span class="help-block"></span>
+                    </div>
+                <!-- /.box-body -->
+                <div class="box-footer">
+                    <button type="button" class="btn btn-default" onclick="href.post('/member', '#mainform');return false;">취소</button>
+                    <button type="submit" onclick ="addFn();return false;"class="btn btn-info pull-right">등록</button>
+        </div>
+                <!-- /.box-footer -->
+            </form>
+        </div>
+        <!-- /.box -->
+    </section>
+    <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+#parse("include/footer.vm")
+<script src="/resources/js/member/add.js"></script>

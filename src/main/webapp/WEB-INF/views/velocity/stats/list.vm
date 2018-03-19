@@ -1,0 +1,169 @@
+#parse("include/header.vm")
+<!-- bootstrap datepicker -->
+<link rel="stylesheet" href="/resources/plugins/datepicker/datepicker3.css">
+<!-- Select2 -->
+<link rel="stylesheet" href="/resources/plugins/select2/select2.min.css">
+<!-- InputMask -->
+<script src="/resources/plugins/input-mask/jquery.inputmask.js"></script>
+<script src="/resources/plugins/input-mask/jquery.inputmask.date.extensions.js"></script>
+<script src="/resources/plugins/input-mask/jquery.inputmask.extensions.js"></script>
+<!-- daterange picker -->
+<link rel="stylesheet" href="/resources/plugins/daterangepicker/daterangepicker.css">
+<!-- date-range-picker -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.2/moment.min.js"></script>
+<script src="/resources/plugins/daterangepicker/daterangepicker.js"></script>
+<!-- bootstrap datepicker -->
+<script src="/resources/plugins/datepicker/bootstrap-datepicker-20170621.js"></script>
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <h1>업무시간통계</h1>
+        <ol class="breadcrumb">
+            <li><a href="#"><i class="fa fa-dashboard"></i> 업무시간통계</a></li>
+            <li class="active">리스트</li>
+        </ol>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <!-- Date and time range -->
+        <!-- Your Page Content Here -->
+        <div class="box">
+            <!-- /.box-header -->
+            <div class="box-body">
+                <form class="form-inline" name="schForm" id ="schForm">
+                    <input type ="hidden" name ="seq" id = "seq" value ="$open.seq"/>
+                    <input type ="hidden" name ="isopen" id ="isopen" value = "$open.isopen"/>
+                    <div class="col-sm-9">
+                        <a class="btn btn-app" href ="#" onclick="excelFn();return false;">
+                            <i class="fa fa-download"></i> Download
+                        </a>
+                    </div>
+                    <div class="col-md-3 pull-right">
+                        <div class="row pull-right">
+                           <div class="input-group col-sm-5">
+                                    <div class="input-group-addon">
+                                        <i class="fa fa-calendar"></i>
+                                    </div>
+                                    <input type="text" class="form-control pull-right" id="date" name="date">
+                                </div>
+                                <select name="option_seq" id="option_seq" class="form-control">
+                                    <option value="">프로젝트 옵션</option>
+                                     #foreach($data in $optionList)
+                                        <option value="$data.detail_code">$data.code_val</option>
+                                     #end
+                                </select>
+                        </div>
+                        <div class="row pull-left">
+                            <div class="input-group col-sm-2" style ="width:100%">
+                                <input type ="hidden" name="deptName" id="deptName">
+                                <select name="dept" id="dept" multiple="multiple" class="form-control select2">
+                                        #foreach($data in $deptList)
+                                            <option value="$data.detail_code"
+                                                #if($utils.getSession('login').dept == $data.detail_code) selected = "selected"#end
+                                            >$data.code_val</option>
+                                        #end
+                                </select>
+                                 <button type="button" id="checkBtn" class="btn btn-primary pull-right mgr5p" onclick="openFn();return false;"/>
+                                <button type="button" id ="schBtn" class="btn btn-primary pull-right mgr2p" onclick="dataFn();return false;">검색</button>
+                             </div>
+                        </div>
+                    </div>
+                </form>
+                <div id ="list_ajax"></div>
+            </div>
+        </div>
+</div>
+</section>
+<!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+#parse("include/footer.vm")
+<!-- Page script -->
+<!-- Select2 -->
+<!-- date-range-picker -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.2/moment.min.js"></script>
+<!-- bootstrap datepicker -->
+<script src="/resources/plugins/select2/select2.full.min.js"></script>
+<script>
+    $(function () {
+        // Menu 활성화
+        $('.sidebar-menu li').eq(3).addClass('active');
+        // 날짜
+        $("#date").datepicker({
+            format: 'yyyy-mm',
+        }).datepicker("setDate", new Date());
+        $("#dept").select2();
+
+        /* 통계 데이터 */
+        dataFn();
+    });
+
+    /* 통계 데이터 가져오는 Function */
+    function dataFn(){
+        var d = '';
+        var dept = $('#dept').select2('data');
+        $.each(dept ,function(index, data){
+            d += data.text;
+            if( index != dept.length-1 ) d += ',';
+        });
+        $('#deptName').val(d);
+
+        $.ajax({
+            type : 'get',
+            url : '/stats/list',
+            data : $('#schForm').serialize(),
+            dataType : 'html',
+            error : function(err){
+                console.log(err);
+                alert('[ERROR] 고객센터로 연락바랍니다.');
+            },
+            success : function(data){
+                $('#list_ajax').html(data);
+            }
+        });
+    }
+
+    /* 엑셀 다운로드  */
+    function excelFn(){
+       $('#schForm').attr('method','post').attr('action','/stats/excel').submit();
+    }
+
+    /*  월별 수정권한 변경 */
+    function openFn(){
+        var str = '(' + $('#date').val() + ')';
+        var isopen;
+        if('true' == $('#isopen').val()){
+            str = '마감완료로 변경하겠습니까? ' + str;
+            isopen = 'false';
+        }else{
+            console.log('true변경' );
+            str = '마감으로 변경하겠습니까? ' + str;
+            isopen = 'true';
+        }
+        if(confirm(str)){
+            $.ajax({
+                type : 'get',
+                url : '/stats/changeCheck',
+                data : {
+                    seq : $('#seq').val(),
+                    isopen : isopen
+                },
+                dataType : 'json',
+                error : function(err){
+                    console.log(err);
+                    alert('[ERROR] 고객센터로 연락바랍니다.');
+                },
+                success : function(data){
+                    $('#isopen').val(isopen);
+                    if('true'==isopen){
+                        $('#checkBtn').html('마감');     // 가능
+                    }else{
+                        $('#checkBtn').html('마감완료'); // 불가능
+                    }
+                }
+            });
+        }
+    }
+</script>

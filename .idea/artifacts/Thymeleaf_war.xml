@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="Thymeleaf:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="timeReport-1.0-SNAPSHOT.war">
+      <element id="artifact" artifact-name="Thymeleaf:war exploded" />
+    </root>
+  </artifact>
+</component>

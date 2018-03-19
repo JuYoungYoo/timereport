@@ -1,0 +1,25 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="efuture.persistence.MainDAO">
+    <!--로그인 체크-->
+    <select id="loginCheck" parameterType="hashmap" resultType="efuture.domain.UserVO">
+        SELECT
+          seq,
+          userid,
+          name,
+          grade,
+          dept
+        FROM tb_member
+        WHERE
+          userid = #{userid} AND
+          pwd = #{pwd}
+    </select>
+    <!--로그인 히스토리 ADD -->
+    <insert id="loginHistory" parameterType="hashmap">
+        INSERT INTO
+          tb_login_history
+         (userid,ipaddr,regdate)
+        VALUE
+         (#{userid},#{ipaddr},sysdate())
+    </insert>
+</mapper>

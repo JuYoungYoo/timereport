@@ -1,0 +1,199 @@
+#parse("include/header.vm")
+
+<!-- iCheck for checkboxes and radio inputs -->
+<link rel="stylesheet" href="/resources/plugins/iCheck/all.css">
+<!-- iCheck 1.0.1 -->
+<script src="/resources/plugins/iCheck/icheck.min.js"></script>
+<!-- DataTables -->
+<link rel="stylesheet" href="/resources/plugins/datatables/dataTables.bootstrap.css">
+<script src="/resources/plugins/datatables/jquery.dataTables.min.js"></script>
+<script src="/resources/plugins/datatables/dataTables.bootstrap.min.js"></script>
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <h1>
+            프로젝트 관리
+            <small>LIST</small>
+        </h1>
+        <ol class="breadcrumb">
+            <li class="active">Home</li>
+            <li><a href="#"><i class="fa fa-dashboard"></i> 프로젝트 관리</a></li>
+            <li class="active">List</li>
+        </ol>
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+        <form name="mainform" id="mainform">
+            <input type ="hidden" name ="seq" id ="seq" value = "$!schInfo.seq"/>
+            <input type ="hidden" name ="current" id ="current" value = "$!schInfo.current"/>
+            <!-- Your Page Content Here -->
+            <div class="box">
+                <!-- /.box-header -->
+                <div class="box-body">
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <div class="dataTables_length">
+                                <label>Show
+                                    <select name="perPageNum" id="perPageNum" class="form-control input-sm">
+                                        <option value="10" #if(10 == $!schInfo.perPageNum)selected #end>10</option>
+                                        <option value="25" #if(25 == $!schInfo.perPageNum)selected #end>25</option>
+                                        <option value="50" #if(50 == $!schInfo.perPageNum)selected #end>50</option>
+                                        <option value="100" #if(100 == $!schInfo.perPageNum)selected #end>100</option>
+                                    </select>
+                                </label>
+                                <select name="ST_CODE" id="ST_CODE" class="form-control input-sm wdauto">
+                                    <option value="">개발상황</option>
+                                    #foreach($vo in $stateList)
+                                        <option value="$vo.detail_code" #if($!vo.detail_code == $!schInfo.ST_CODE) selected #end>
+                                            $vo.code_val
+                                        </option>
+                                    #end
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div id="example2_filter" class="dataTables_filter">
+                                <input type="text" id="schValue" name="schValue" class="form-control input-sm"
+                                       placeholder="프로젝트 명" value = "$!schInfo.schValue">
+                                <button type="button" class="btn btn-default btn-sm pull-right" id="schbtn">검색</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table class="table table-bordered table-hover dataTable">
+                        <thead>
+                            <tr>
+                                <th class="wd10p">
+                                    <label>
+                                        <input type="checkbox" class="minimal" name="allCheck" id="allCheck">
+                                    </label>
+                                </th>
+                                <th class="sorting">번호</th>
+                                <th class="sorting">프로젝트 명</th>
+                                <th class="sorting">약어</th>
+                                <th class="sorting">개발상황</th>
+                                <th class="sorting">등록일</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            #if($list.isEmpty())
+                                <tr> <td colspan = "6" align = "center" style="padding:19%;">데이터가 없습니다.</td> </tr>
+                            #else
+                                #foreach($vo in $list)
+                                    <tr>
+                                        <td class="wd10p">
+                                            <label><input type="checkbox" class="minimal" name="check" value ="$vo.seq"></label>
+                                        </td>
+                                        <td>$math.sub($page.total,$foreach.index)</td>
+                                        <td>
+                                            <a href="javascript:;" onclick="contentFn('$!vo.seq');return false;">$!vo.project_name</a>
+                                        </td>
+                                        <td>$!vo.project_short_name</td>
+                                        <td>$!vo.state</td>
+                                        <td>$!date.format('YYYY-MM-dd HH:mm:ss',$vo.regdate)</td>
+                                    </tr>
+                                #end
+                            #end
+                        </tbody>
+                    </table>
+                    <div class="row">
+                        <div class="col-sm-5">
+                            <div class="dataTables_info" id="example1_info" role="status" aria-live="polite">
+                                Showing $page.current to $page.perPageNum of $page.total entries
+                            </div>
+                        </div>
+                    #*page*#
+                        <div class="col-sm-7">
+                            #parse("include/page.vm")
+                        </div>
+                    #*page*#
+                    </div>
+                </div>
+                <!-- /.box-body -->
+                <div class="box-footer">
+                    <button type="button" class="btn btn-primary pull-right mgr2p" onclick ="href.post('/project/form/add','#mainform')">등록</button>
+                    <button type="button" class="btn btn-default pull-right mgr2p" onclick ="deleteFn();">삭제</button>
+                    <button type ="button" class="btn btn-default pull-right mgr2p" onclick ="location.href='/project'">초기화</button>
+                </div>
+            </div>
+            <!-- /.box -->
+</div>
+<!-- /.col -->
+</div>
+</form>
+</section>
+<!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+#parse("include/footer.vm")
+
+<script>
+    $('.sidebar-menu li').eq(2).addClass('active');
+
+    $(function(){
+        /*search select event*/
+        $('#perPageNum').add('#ST_CODE').change(function(){
+            $('#current').val(1);
+            href.post('/project', '#mainform');
+        });
+        /* search button event */
+        $('#schbtn').click(function(){
+            $('#current').val(1);
+           href.post('/project','#mainform');
+        });
+    });
+    /*      삭제      */
+    function deleteFn() {
+        /*삭제 할 회원 SEQ : JSON Array*/
+        var seqArray = new Array();
+        var selCnt = $('input[name="check"]:checked').size();
+        if(0 == selCnt){
+            alert('삭제할 프로젝트를 선택해주세요.');
+            return;
+        }
+        if(!confirm('선택하신 프로젝트는 총 ' + selCnt + '입니다.\n삭제하시겠습니까?')) return;
+        $('input[name="check"]:checked').each(function () {
+            seqArray.push($(this).val());
+        });
+
+        $.ajax({
+            type : 'post',
+            url : '/project/delete',
+            data : JSON.stringify(seqArray),
+            contentType : 'application/json',
+            dataType : 'json',
+            error : function(err){
+                console.log(err);
+                alert('[ERROR] 고객센터로 연락바랍니다.');
+            },
+            success : function (data){
+                if(typeof(data.FAIL_LIST) != "undefined"){
+                    var list = '';
+                    var length = data.FAIL_LIST.length;
+                    $.each(data.FAIL_LIST, function(index, data){
+                        list += $('input[type="checkbox"][value="' + data + '"]').parents('tr').find('td:eq(2)>a').text();
+                        if(index + 1 < length ){
+                            list += ',';
+                        }
+                    });
+                    data.RESULT_MSG += '(' + list + ')';
+                }
+                alert(data.RESULT_MSG);
+                href.post('/project','#mainform');
+            }
+        })
+    }
+    /*  내용보기 */
+    function contentFn(seq) {
+        $('#seq').val(seq);
+        href.post('/project/form/update', '#mainform');
+    }
+    /*  페이지 이동  */
+    function movePageFn(page){
+        $('#current').val(page);
+        href.post('/project', '#mainform');
+    }
+</script>

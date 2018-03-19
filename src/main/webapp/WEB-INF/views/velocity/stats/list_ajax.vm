@@ -1,0 +1,71 @@
+<style>
+    table.dataTable thead > tr > th {
+        padding-right: 0px !important;
+    }
+</style>
+<table class="table table-bordered table-hover dataTable">
+    <thead>
+    <tr>
+        <th>Project</th>
+        <th>Option</th>
+        #foreach($data in $memberList)
+            <th>$data.name</th>
+        #end
+        <th>TOTAL</th>
+    </tr>
+    </thead>
+    <tbody>
+        #if($totalList.size() == 0)
+            #set ($size = $memberList.size()+2)
+        <tr>
+            <td colspan="$size" align="center" style="padding:19%;"> 데이터가 없습니다.</td>
+        </tr>
+        #else
+            #foreach($data in $dataList)
+                #set($optionList = $data.optionList)
+                #if(0 != $data.optionSize)
+                <tr>
+                    <td rowspan="$data.optionSize">$data.project_name</td>
+                    #foreach($option in $optionList)
+                        <td>$option.get('option_val')</td>
+                        #foreach($member in $memberList)
+                            #if(0 == $option.get($member.userid))
+                                <td></td>
+                            #else
+                                <td>${option.get($member.userid)}</td>
+                            #end
+                        #end
+                        <td>$option.total</td>
+                            #if(!$foreach.last)</tr><tr>#end
+                    #end
+                </tr>
+                #end
+            #end
+        #end
+    </tr>
+    </c:if>
+    </c:forEach>
+    </tbody>
+    <tfoot>
+    <tr>
+        <td colspan="2">총 업무시간</td>
+        #foreach($member in $memberList)
+            <td>$total.get($member.userid)</td>
+        #end
+        <td>$total.total</td>
+    </tr>
+    </tfoot>
+</table>
+<script>
+    /********   수정권한 변경     *********/
+    if ('$!check' == '') {
+        $('#checkBtn').hide();
+    } else {
+        $('#checkBtn').show();
+        $('#seq').val($check.seq);
+        $('#isopen').val($check.isopen);
+        if ('true' == '$check.isopen') $('#checkBtn').html('마감');
+        else $('#checkBtn').html('마감완료');
+    }
+    /**************************************/
+</script>
